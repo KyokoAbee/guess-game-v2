@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link href="https://fonts.googleapis.com/css?family=Noto+Sans+JP" rel="stylesheet" />
+    <link rel="stylesheet" href="css/asobi.css">
+    
+    <!-- Google フォント追加 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Darumadrop+One&family=Rampart+One&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="button-container">
+        <!-- 説明 -->
+        <p>なるべく少ないクリック数と時間で、下に隠れているものを当ててみてね!!</p>
+    </div>
+
+<div class="game-container">
+    <!-- for 文を使ってグリッドセルを100 個作成 -->
+     <div class="grid-wrapper">
+    
+            <div class="grid-layout">
+                <script>
+                    for (let i = 0; i < 50; i++){   /*0をiに代入。100になるまで繰り返す*/
+                        const div = document.createElement('div');
+                        document.querySelector('.grid-layout').appendChild(div);
+
+                    }    
+                </script>
+        
+            </div>
+        
+        <!-- クイズ用の画像 800x500-->
+        <div class="img-container">
+            <img id="game-image"  src="./images/gohan.jpg" alt=""> 
+        </div>
+    
+     </div>
+</div>
+
+<div class="button-container">
+    <div class="button">
+        <!-- 回数部分だけ操作したいから、span を使う。id/class OK -->
+        <p>クリック回数： <span id="clickcount">0</span>回</p>
+
+        <!-- 30秒タイマー -->
+         <p id="timer">残り時間：30 秒</span></p>
+
+        <!-- スタートボタン -->
+        <button id="button">Click</button>
+
+         <!-- stop ボタン -->
+         <button id="stop">STOP</button>
+
+         <!-- 次の問題 -->
+        <button id="next">次のお題</button>
+    </div>
+
+    <!-- ゲーム終了時に出す画像 -->
+     <div id="end-game-image" class="hidden">
+        <p class="end-game-text">ゲームはこれにて終了！</p>
+        <img src="./images/nohara.png" alt="しんちゃん">
+     </div>
+
+</div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script>
+
+    // クリック回数を表示する変数
+    let clickcounter = 0;
+    // 何問目かを追跡
+    let questionCounter = 0;
+
+    //長さが50の空の配列。_は使わない引数。iは各インデックスの意味。配列の各場所に出た数字を入れる。
+    let numbers = Array.from({ length: 50 }, (_, i) => i);
+
+    // 画像用の配列
+    const images = [
+        './images/subway.jpg',
+        './images/oden.jpg',
+        "./images/gohan.jpg"
+    ];
+
+    // 一度出た画像を記録する配列
+    let usedImages = [];
+
+    // ゲーム開始時にランダムに画像を選ぶ
+    function setRandomImages () {
+
+    // 使用済みの画像は除外して、利用可能な画像を選ぶ
+    let availableImages = images.filter(img => !usedImages.includes(img));
+
+    // 利用可能な画像がない場合
+    if (availableImages.length === 0) {
+        const endGameImage = document.getElementById("end-game-image");
+        endGameImage.classList.remove("hidden");
+        endGameImage.classList.add("visible");
+        return;
+    }
+
+    // availableImages からランダムに画像を選択し、randomIndex に入れる
+    const randomIndex = Math.floor(Math.random() * availableImages.length);
+    // randomIndex をselectedImages に入れる
+    const selectedImage = availableImages[randomIndex];
+    
+    // 表示画像
+    console.log("選択された画像:" , selectedImage);
+    document.getElementById("game-image").src = selectedImage;
+
+    // 出た画像をusedImages 配列に入れる
+    usedImages.push(selectedImage);
+    }
+
+    // 残り時間
+    let leftTime = 30; 
+    // タイマー
+    let timeID = null;
+
+    // タイマー表示
+    function updateTimer() {
+        document.getElementById("timer").textContent = `残り時間：${leftTime} 秒`; 
+    }
+
+    // STARTボタンをクリックしたときに
+    $("#button").on("click", function (){
+
+    // 数字がなくなったら、ゲーム終了
+    if (numbers.length === 0){
+        alert("ゲーム終了！");
+        return;
+    }
+
+    // ランダムな数字を取り出す
+    const randomIndex = Math.floor(Math.random() * numbers.length);
+    const RandomNumber = numbers[randomIndex];
+    console.log(randomIndex);
+
+
+    // 取り出した数字を配列から削除
+    numbers.splice(randomIndex, 1);
+
+    // クリック数をカウント
+    clickcounter ++;
+
+    // クリック数を画面に表示させる ※順番が ↑ と前後逆で、初回カウントが0から始まってしまっていた…
+    document.getElementById("clickcount").textContent = clickcounter;
+
+    // すべてのグリッドを取得
+    const GridCells = document.querySelectorAll(".grid-layout div");
+
+    // ランダムな数字の場所を透過していく。
+    // Color のC は大文字じゃないとだめ。
+    GridCells[RandomNumber].style.backgroundColor = "transparent";
+
+
+    // タイマーをセット
+    if (timeID === null) {
+        timeID = setInterval(function() {
+            leftTime--;  //残り時間を減らす
+            updateTimer();  //タイマー表示を更新
+
+            if (leftTime <= 0){
+                clearInterval(timeID);
+                timeID = null;
+                // alert("タイムアップです！");
+            }
+        }, 1000);
+    }
+    });
+
+    // stop ボタンでタイマーを停止
+    $("#stop").on("click" , function(){
+        if (timeID !== null){
+            clearInterval(timeID);
+            timeID = null;
+        }
+     })
+
+    // 次のお題へをクリックしたときに
+    $("#next").on("click", function() {
+
+        questionCounter++; //次に進んだらカウントを増やす
+
+        // 2問終了時にしんちゃん
+        if (questionCounter === 2) {
+        const endGameImage = document.getElementById("end-game-image");
+        endGameImage.classList.remove("hidden");
+        endGameImage.classList.add("visible");
+            return;
+
+        // 一定時間後に非表示
+        setTImeout(() =>{
+            endGameImage.classList.remove("visible");
+            endGameImage.classList,add("hidden");
+        }, 3000);  //3秒後に消す
+        }
+
+        // setRandomImages 関数を呼び出して、画像をチェンジ
+        setRandomImages();
+ 
+        // クリックカウントをリセット
+        clickcounter = 0;
+        document.getElementById("clickcount").textContent = clickcounter;
+
+        // 残り時間もリセット
+        leftTime = 30;
+        updateTimer();
+
+        // 透過状態もリセット
+        const GridCells = document.querySelectorAll(".grid-layout div");
+        GridCells.forEach(cell => {
+        cell.style.backgroundColor = ""; //元に戻す
+        });
+
+        // ランダムな数字もリセット
+        numbers = Array.from({length: 50}, (_, i) => i);
+
+    });
+
+        // ページが読み込まれた時に初期画像をランダムに設定
+        window.onload = function() {
+        setRandomImages();
+    };
+
+    </script>
+</body>
+</html>
